@@ -6,8 +6,8 @@ const emit = defineEmits(['delete-message']);
 <template>
   <div class="chat-box">
     <div v-for="message in messages" :key="message.id" class="message">
-      <span>{{ message.text }}</span>
-      <button @click="emit('delete-message', message.id)">Delete</button>
+      <strong>{{ message.name }}:</strong> <span>{{ message.text }}</span>
+      <button @click="emit('delete-message', message.id)">🗑️</button>
     </div>
   </div>
 </template>
@@ -31,14 +31,15 @@ const emit = defineEmits(['delete-message']);
   align-items: center;
 }
 button {
-  background: rgb(115, 169, 227);
+  background: rgb(188, 181, 247);
   color: white;
   border: none;
   padding: 5px;
   cursor: pointer;
   border-radius: 3px;
+  margin-bottom: 17px;
 }
 button:hover {
-  background: rgb(180, 184, 246);
+  background: rgb(155, 167, 243);
 }
 </style>
