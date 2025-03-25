@@ -1,45 +1,65 @@
 <script setup>
-defineProps(['messages']);
+import { defineProps, defineEmits } from 'vue';
+
+const props = defineProps(['messages']);
 const emit = defineEmits(['delete-message']);
+
+// Format timestamp
+const formatTimestamp = (timestamp) => {
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  }) + ' | ' + date.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+  });
+};
 </script>
 
 <template>
-  <div class="chat-box">
-    <div v-for="message in messages" :key="message.id" class="message">
-      <strong>{{ message.name }}:</strong> <span>{{ message.text }}</span>
-      <button @click="emit('delete-message', message.id)">🗑️</button>
-    </div>
+  <div class="chat-messages">
+    <transition-group name="fade">
+      <div v-for="(msg, index) in messages" :key="msg.createdAt" class="message">
+        <p><strong>{{ msg.person }}:</strong> {{ msg.message }}</p>
+        <small>{{ formatTimestamp(msg.createdAt) }}</small>
+        <button @click="emit('delete-message', index)">delete</button>
+      </div>
+    </transition-group>
   </div>
 </template>
 
 <style>
-.chat-box {
-  height: 300px;
-  border: 1px solid #ccc;
+.chat-messages {
+  max-height: 300px;
   overflow-y: auto;
   padding: 10px;
-  margin-bottom: 10px;
 }
 .message {
-  background: #f1f1f1;
-  margin: 5px;
+  background: #f3f3f3;
   padding: 8px;
-  border-radius: 5px;
-  text-align: left;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  margin: 5px 0;
+  border-radius: 6px;
+  position: relative;
+  font-family: 'Courier New', Courier, monospace;
+
 }
-button {
-  background: rgb(188, 181, 247);
+body.dark .message {
+  background:#333;
   color: white;
-  border: none;
-  padding: 5px;
-  cursor: pointer;
-  border-radius: 3px;
-  margin-bottom: 17px;
 }
-button:hover {
-  background: rgb(155, 167, 243);
+small {
+  display: block;
+  font-size: 0.8rem;
+  color: white;
+}
+
+/* Fade Animations */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.5s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 </style>

@@ -3,48 +3,96 @@ import { ref, onMounted } from 'vue';
 import ChatMessages from './components/ChatMessages.vue';
 import ChatInput from './components/ChatInput.vue';
 
-const messages = ref([]);
 const userName = ref('');
 const isNameSet = ref(false);
-const showNameInput = ref(false); 
+const messages = ref([]);
+const darkMode = ref(false);
+
+// Predefined random replies
+const autoReplies = [
+  "I'm fine, how about you?",
+  "aur bata",
+  "UI needs more modifications",
+  "Good night",
+  "had lunch?",
+  "What are you up to?",
+  "Dont panic!! every thing gonna be alright!",
+  "This is awesome website for UI inspiration.",
+];
+
+// Load name and messages
 onMounted(() => {
   const storedName = localStorage.getItem('userName');
   if (storedName) {
     userName.value = storedName;
     isNameSet.value = true;
+    loadMessages();
   }
-
-  // Load messages from localStorage
-  const storedMessages = localStorage.getItem('chatMessages');
-  if (storedMessages) {
-    messages.value = JSON.parse(storedMessages);
-  }
+  
+  darkMode.value = localStorage.getItem('darkMode') === 'true';
+  document.body.classList.toggle('dark', darkMode.value);
 });
 
-// Save the entered name to localStorage
-const saveName = () => {
-  if (userName.value.trim() === '') return;
+// Save name
+const saveName = (event) => {
+  event.preventDefault();
+  if (!userName.value.trim()) return;
   localStorage.setItem('userName', userName.value);
   isNameSet.value = true;
-  showNameInput.value = false; // Hide input after saving
+  loadMessages();
 };
 
-// Function to add a new message
-const addMessage = (newMessage) => {
-  const newMsg = { id: Date.now(), name: userName.value, text: newMessage };
+// Load messages
+const loadMessages = () => {
+  messages.value = JSON.parse(localStorage.getItem('messages') || '[]');
+};
+
+// Save messages
+const saveMessages = () => {
+  localStorage.setItem('messages', JSON.stringify(messages.value));
+};
+
+// Send new message
+const sendMessage = (message) => {
+  const newMsg = {
+    person: userName.value,
+    type: 'sent',
+    message,
+    createdAt: Date.now(),
+  };
   messages.value.push(newMsg);
   saveMessages();
+
+  // Generate auto-reply
+  setTimeout(() => {
+    const replyMsg = {
+      person: "Shrinat prabhu",
+      type: 'received',
+      message: autoReplies[Math.floor(Math.random() * autoReplies.length)],
+      createdAt: Date.now(),
+    };
+    messages.value.push(replyMsg);
+    saveMessages();
+  }, 1000);
 };
 
-// Function to delete a message
-const deleteMessage = (id) => {
-  messages.value = messages.value.filter(msg => msg.id !== id);
+// Delete message
+const deleteMessage = (index) => {
+  messages.value.splice(index, 1);
   saveMessages();
 };
 
-// Save messages to localStorage
-const saveMessages = () => {
-  localStorage.setItem('chatMessages', JSON.stringify(messages.value));
+// Toggle dark mode
+const toggleDarkMode = () => {
+  darkMode.value = !darkMode.value;
+  localStorage.setItem('darkMode', darkMode.value);
+  document.body.classList.toggle('dark', darkMode.value);
+};
+
+// Change user name
+const changeName = () => {
+  localStorage.removeItem('userName');
+  isNameSet.value = false;
 };
 </script>
 
@@ -52,45 +100,47 @@ const saveMessages = () => {
   <div class="container">
     <h2>Vue Chat App</h2>
 
-    <!-- If name is not set, show input -->
-    <div v-if="!isNameSet" class="name-input">
-      <input v-model="userName" placeholder="Enter your name..." />
-      <button @click="saveName">Save Name</button>
-    </div>
+    <!-- Dark Mode Toggle -->
+    <button @click="toggleDarkMode">
+      {{ darkMode ? " Light Mode" : "Dark Mode" }}
+    </button>
 
-    <!-- If name is set, show chat -->
+    <!-- Name Input Form -->
+    <form v-if="!isNameSet" @submit="saveName" class="name-form">
+      <label>Enter Your Name:</label>
+      <input v-model="userName" required />
+      <button type="submit">Start Chat</button>
+    </form>
+
+    <!-- Chat Interface -->
     <div v-else>
-      <p>Welcome, <strong>{{ userName }}</strong>! 🎉</p>
-      
-      <!-- Change Name Button -->
-      <button @click="showNameInput = !showNameInput">Change Name</button>
-      
-      <!-- Show Name Input if user wants to change name -->
-      <div v-if="showNameInput" class="name-input">
-        <input v-model="userName" placeholder="Enter new name..." />
-        <button @click="saveName">Update Name</button>
-      </div>
+      <p>Welcome, <strong>{{ userName }}</strong>! 
+        <button @click="changeName">Change Name</button>
+      </p>
 
       <ChatMessages :messages="messages" @delete-message="deleteMessage" />
-      <ChatInput @send-message="addMessage" />
+      <ChatInput @send-message="sendMessage" />
     </div>
   </div>
 </template>
 
 <style>
-
+/* Light Mode */
 .container {
-  width: 400px;
+  width:80vw;
   margin: 0 auto;
   text-align: center;
-}
-.name-input {
-  margin-bottom: 17px;
+  background: white;
+  color: black;
+  padding: 20px;
+  border-radius: 8px;
+  height: 100vh;
   
 }
-button {
-  margin-top: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
+
+/* Dark Mode */
+body.dark .container {
+  background: #121212;
+  color: white;
 }
 </style>
